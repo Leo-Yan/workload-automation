@@ -109,14 +109,14 @@ class VideoWorkload(Workload):
             self.logger.debug('Copying {} to device.'.format(self.host_video_file))
             self.device.push_file(self.host_video_file, on_device_video_file, timeout=120)
         self.device.clear_logcat()
-        command = 'am start -W -S -n com.android.gallery3d/.app.MovieActivity -d {}'.format(on_device_video_file)
+        command = 'am start -W -S -n org.videolan.vlc/.gui.video.VideoPlayerActivity -d file://{}'.format(on_device_video_file)
         self.device.execute(command)
 
     def run(self, context):
         self.device.sleep(self.play_duration)
 
     def update_result(self, context):
-        self.device.execute('am force-stop com.android.gallery3d')
+        self.device.execute('am force-stop org.videolan.vlc')
 
     def teardown(self, context):
         pass
