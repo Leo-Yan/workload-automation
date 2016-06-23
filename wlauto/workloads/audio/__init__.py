@@ -71,7 +71,7 @@ class Audio(Workload):
         self.device.clear_logcat()
 
         # Clear browser cache
-        self.device.execute('pm clear com.android.browser')
+        #self.device.execute('pm clear com.android.browser')
 
         if self.clear_file_cache:
             self.device.execute('sync')
@@ -81,8 +81,8 @@ class Audio(Workload):
         self.device.execute('am start -W -S -n com.android.music/.MediaPlaybackActivity -d {}'.format(self.on_device_file))
 
         # Launch the browser to blank the screen
-        self.device.execute('am start -W -n  com.android.browser/.BrowserActivity about:blank')
-        time.sleep(5)  # Wait for browser to be properly launched
+        #self.device.execute('am start -W -n  com.android.browser/.BrowserActivity about:blank')
+        #time.sleep(5)  # Wait for browser to be properly launched
 
     def run(self, context):
         time.sleep(self.duration)
