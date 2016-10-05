@@ -83,7 +83,7 @@ public class UiAutomation extends BaseUiAutomation {
     public void waitForResultsv2() throws Exception {
         UiSelector selector = new UiSelector();
         UiObject resultsWebview = new UiObject(selector.className("android.webkit.WebView"));
-        if (!resultsWebview.waitForExists(TimeUnit.SECONDS.toMillis(200))) {
+        if (!resultsWebview.waitForExists(TimeUnit.SECONDS.toMillis(500))) {
                 throw new UiObjectNotFoundException("Did not see Geekbench results screen.");
         }
     }
@@ -93,7 +93,7 @@ public class UiAutomation extends BaseUiAutomation {
         UiObject runningTextView = new UiObject(selector.text("Running Benchmarks...")
                                                         .className("android.widget.TextView"));
         runningTextView.waitForExists(TimeUnit.SECONDS.toMillis(2));
-        if (!runningTextView.waitUntilGone(TimeUnit.SECONDS.toMillis(200))) {
+        if (!runningTextView.waitUntilGone(TimeUnit.SECONDS.toMillis(500))) {
                 throw new UiObjectNotFoundException("Did not get to Geekbench results screen.");
         }
     }

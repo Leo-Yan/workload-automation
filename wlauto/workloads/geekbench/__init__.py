@@ -97,7 +97,7 @@ class Geekbench(AndroidUiAutoBenchmark):
             self.version = '2.2.7'
         self.uiauto_params['version'] = self.version
         self.uiauto_params['times'] = self.times
-        self.run_timeout = 5 * 60 * self.times
+        self.run_timeout = 8 * 60 * self.times
 
     def initialize(self, context):
         if self.version == '3.0.0' and not self.device.is_rooted:
@@ -132,6 +132,8 @@ class Geekbench(AndroidUiAutoBenchmark):
         on_device_output_files = [f.strip() for f in self.device.execute('ls {}'.format(outfile_glob),
                                                                          as_root=True).split('\n') if f]
         for i, on_device_output_file in enumerate(on_device_output_files):
+            if on_device_output_file == "":
+                continue
             host_temp_file = tempfile.mktemp()
             self.device.pull_file(on_device_output_file, host_temp_file)
             host_output_file = os.path.join(context.output_directory, os.path.basename(on_device_output_file))
