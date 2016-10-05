@@ -53,7 +53,7 @@ class Vellamo(AndroidUiAutoBenchmark):
         '3.2.4': ['Browser', 'Metal', 'Multi'],
     }
     valid_versions = benchmark_types.keys()
-    summary_metrics = None
+    summary_metrics = ['Browser', 'Multicore', 'Metal']
 
     parameters = [
         Parameter('version', kind=str, allowed_values=valid_versions, default=sorted(benchmark_types, reverse=True)[0],
