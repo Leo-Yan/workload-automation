@@ -38,6 +38,7 @@ class Nenamark(AndroidBenchmark):
     """
     package = 'se.nena.nenamark2'
     activity = 'se.nena.nenamark2.NenaMark2'
+    summary_metrics = ['nenamark score']
 
     parameters = [
         Parameter('duration', kind=int, default=120,
