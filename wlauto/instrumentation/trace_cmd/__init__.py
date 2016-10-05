@@ -28,7 +28,7 @@ from wlauto.utils.types import boolean
 
 OUTPUT_TRACE_FILE = 'trace.dat'
 OUTPUT_TEXT_FILE = '{}.txt'.format(os.path.splitext(OUTPUT_TRACE_FILE)[0])
-TIMEOUT = 180
+TIMEOUT = 300
 
 
 class TraceCmdInstrument(Instrument):
@@ -180,7 +180,7 @@ class TraceCmdInstrument(Instrument):
         if self.mode == 'start':
             if self.buffer_size:
                 self._set_buffer_size()
-            self.device.execute('{} reset'.format(self.trace_cmd), as_root=True, timeout=180)
+            self.device.execute('{} reset'.format(self.trace_cmd), as_root=True, timeout=300)
         elif self.mode == 'record':
             pass
         else:
