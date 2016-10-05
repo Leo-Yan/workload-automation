@@ -318,6 +318,7 @@ class ApkWorkload(Workload):
         return success
 
     def _grant_requested_permissions(self):
+        error_permissions = {"STORAGE", "SET_ORIENTATION", "WRITE_SETTINGS"}
         dumpsys_output = self.device.execute(command="dumpsys package {}".format(self.package))
         permissions = []
         lines = iter(dumpsys_output.splitlines())
@@ -340,7 +341,8 @@ class ApkWorkload(Workload):
                 # on previously granted permissions. In that case, just skip as it
                 # is not fatal to the workload execution
                 try:
-                    self.device.execute("pm grant {} {}".format(self.package, permission))
+                    if permission_name not in error_permissions:
+                        self.device.execute("pm grant {} {}".format(self.package, permission))
                 except DeviceError as e:
                     if "changeable permission" in e.message or "Unknown permission" in e.message:
                         self.logger.debug(e)
