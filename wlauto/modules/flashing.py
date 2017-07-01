@@ -118,7 +118,8 @@ class FastbootFlasher(Flasher):
     def _flash_image(self, device, partition, image_path):
         if not self.prelude_done:
             self._fastboot_prelude(device)
-        fastboot_flash_partition(partition, image_path)
+        command = 'flash {} {}'.format(partition, image_path)
+        fastboot_command(command, timeout=120)
         time.sleep(self.delay)
 
     def _fastboot_prelude(self, device):
@@ -133,6 +134,50 @@ class FastbootFlasher(Flasher):
             time.sleep(self.delay)
             target.sendline('fast')
             time.sleep(self.delay)
+        self.prelude_done = True
+
+
+class Hikey960FastbootFlasher(Flasher):
+
+    name = 'hikey960_fastboot'
+    description = """
+    Enables automated flashing of images using the fastboot utility.
+
+    To use this flasher, a set of image files to be flused are required.
+    In addition a mapping between partitions and image file is required:
+    - Image mapping: In this mode, a mapping between partitions and images is given in the agenda.
+
+    """
+
+    delay = 5
+    serial_timeout = 30
+
+    def flash(self, image_bundle=None, images=None):
+        self.prelude_done = False
+        to_flash = {}
+        to_flash = merge_dicts(to_flash, images or {}, should_normalize=False)
+        for partition, image_path in to_flash.iteritems():
+            self.logger.debug('flashing {}'.format(partition))
+            self._flash_image(self.owner, partition, expand_path(image_path))
+        fastboot_command('reboot')
+
+    def _flash_image(self, device, partition, image_path):
+        if not self.prelude_done:
+            self._fastboot_prelude(device)
+        fastboot_flash_partition(partition, image_path)
+        time.sleep(1)
+
+    def _fastboot_prelude(self, device):
+        with open_serial_connection(port=device.port,
+                                    baudrate=device.baudrate,
+                                    timeout=self.serial_timeout,
+                                    init_dtr=0,
+                                    get_conn=False) as target:
+            device.hard_reset()
+            time.sleep(self.delay)
+            target.sendline('f')
+            target.close()
+
         self.prelude_done = True
 
 
