@@ -424,6 +424,7 @@ class AndroidDevice(BaseLinuxDevice):  # pylint: disable=W0223
         self.push_file(filepath, on_device_file)
         self.execute('cp {} {}'.format(on_device_file, on_device_executable), as_root=self.is_rooted)
         self.execute('chmod 0777 {}'.format(on_device_executable), as_root=self.is_rooted)
+        self.execute('sync', as_root=self.is_rooted)
         return on_device_executable
 
     def uninstall(self, package):
