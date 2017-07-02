@@ -51,12 +51,10 @@ class Hikey960(AndroidDevice):
     android_prompt = 'hikey960:/ $'
 
     def __init__(self, **kwargs):
-        print "__init__"
         super(Hikey960, self).__init__(**kwargs)
         self._just_rebooted = False
 
     def initialize(self, context):
-        print "__initialize__"
         self.execute('svc power stayon true', check_exit_code=False)
 
     def reset(self):
@@ -85,9 +83,9 @@ class Hikey960(AndroidDevice):
         self._just_rebooted = True
 
     def hard_reset(self):
-        os.system('echo "relay8 off" > /dev/ttyACM0')
+        os.system('ssh 192.168.2.44 "echo "relay8 off" > /dev/ttyACM0"')
         time.sleep(3)
-        os.system('echo "relay8 on" > /dev/ttyACM0')
+        os.system('ssh 192.168.2.44 "echo "relay8 on" > /dev/ttyACM0"')
         self._just_rebooted = True
 
     def connect(self):  # NOQA pylint: disable=R0912
