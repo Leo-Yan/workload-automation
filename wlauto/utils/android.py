@@ -290,6 +290,10 @@ def adb_connect(device, timeout=None):
     if tries and output.find('connected to') == -1:
         raise DeviceError('Could not connect to {}'.format(device))
 
+    command = "adb root"
+    logger.debug(command)
+    subprocess.call(command, stderr=subprocess.PIPE, shell=True)
+
 
 def adb_disconnect(device):
     _check_env()
@@ -312,7 +316,7 @@ def poll_for_file(device, dfile):
 am_start_error = re.compile(r"Error: Activity class {[\w|.|/]*} does not exist")
 
 
-def adb_shell(device, command, timeout=None, check_exit_code=False, as_root=False):  # NOQA
+def adb_shell(device, command, timeout=None, check_exit_code=False, as_root=True):  # NOQA
     # pylint: disable=too-many-branches, too-many-locals, too-many-statements
     _check_env()
     if as_root:

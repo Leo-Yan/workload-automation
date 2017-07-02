@@ -674,6 +674,7 @@ class Runner(object):
 
     def _run_workload_iteration(self, workload):
         self.logger.info('\tSetting up')
+        os.system('adb root')
         with self._signal_wrap('WORKLOAD_SETUP'):
             try:
                 workload.setup(self.context)

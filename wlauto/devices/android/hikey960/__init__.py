@@ -56,6 +56,7 @@ class Hikey960(AndroidDevice):
         self._just_rebooted = False
 
     def initialize(self, context):
+	os.system('adb root')
         self.execute('svc power stayon true', check_exit_code=False)
 
     def reset(self):
