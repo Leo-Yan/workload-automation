@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 
+import os
 
 from wlauto import Module, Parameter
 from wlauto.utils.serial_port import open_serial_connection
@@ -71,3 +72,24 @@ class OdroidXU3ctiveCooling(Module):
     def stop_active_cooling(self):
         self.owner.set_sysfile_value('/sys/devices/odroid_fan.15/fan_mode', 0, verify=False)
         self.owner.set_sysfile_value('/sys/devices/odroid_fan.15/pwm_duty', 1, verify=False)
+
+
+class Hikey960FanActiveCooling(Module):
+
+    name = 'hikey960-fan'
+    description = """
+    Enabled active cooling by controling the fan on Hikey960
+
+    .. note:: depending on the kernel used, it may not be possible to turn the fan
+              off completely; in such situations, the fan will be set to its minimum
+              speed.
+
+    """
+
+    capabilities = ['active_cooling']
+
+    def start_active_cooling(self):
+        os.system('ssh 192.168.2.44 "echo "relay4 on" > /dev/ttyACM0"')
+
+    def stop_active_cooling(self):
+        os.system('ssh 192.168.2.44 "echo "relay4 off" > /dev/ttyACM0"')

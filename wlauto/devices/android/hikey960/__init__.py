@@ -34,6 +34,7 @@ class Hikey960(AndroidDevice):
 
     core_modules = [
         'hikey960_fastboot',
+        'hikey960-fan',
     ]
 
     parameters = [
