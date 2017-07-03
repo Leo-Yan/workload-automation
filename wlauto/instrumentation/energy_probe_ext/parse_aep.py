@@ -342,6 +342,8 @@ class AEP_parser:
 
         self.fs.write ("Total nrj: %8.3f J for %s -- duration %8.3f sec\n" % (total/1000000000000.0, "Platform ", (max[0]-min[0])/1000000.0))
 
+        return total/1000000000000.0, total/(max[0]-min[0])/1000.0
+
 
 if __name__ == '__main__':
 

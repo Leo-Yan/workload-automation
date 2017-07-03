@@ -28,6 +28,7 @@ except ImportError:
 
 sys.path.append(os.path.dirname(sys.modules[__name__].__file__))
 from parse_aep import AEP_parser
+from collections import defaultdict, OrderedDict
 
 from wlauto import Instrument, Parameter, Executable
 from wlauto.exceptions import InstrumentError, ConfigError
@@ -50,6 +51,7 @@ class ArmEnergyProbe(Instrument):
                      range of 5 to 500 mOhm but the voltage on the shunt resistor must stay smaller than 165mV.
                      The resistance of the shunt resistors is a mandatory parameter to be set in the ``config`` file.
                     """
+    summary_metrics = [ 'Energy', 'Power' ]
 
     parameters = [
         Parameter('config', kind=str, default='./config',
@@ -89,4 +91,6 @@ class ArmEnergyProbe(Instrument):
     def update_result(self, context):  # pylint: disable=too-many-locals
         self.logger.debug("Parse data and compute consumed energy")
         self.parser = AEP_parser(self.output_file_raw, self.output_file, self.output_file_figure)
-        self.parser.parse_AEP()
+        nrg, pwr = self.parser.parse_AEP()
+        context.add_metric("Energy", nrg, "J")
+        context.add_metric("Power", pwr, "mW (avg)")
