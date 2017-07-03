@@ -152,6 +152,7 @@ class Geekbench(AndroidUiAutoBenchmark):
                                           section['multicore_score'])
 
     def update_result_4(self, context):
+        os.system('sync')
         outfile_glob = self.device.path.join(self.device.package_data_directory, self.package, 'files', '*gb4')
         on_device_output_files = [f.strip() for f in self.device.execute('ls {}'.format(outfile_glob),
                                                                          as_root=True).split('\n') if f]
