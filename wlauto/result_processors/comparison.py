@@ -51,12 +51,35 @@ class ComparisionReporter(ResultProcessor):
     }
 
     perf_scenarios = {
-        'hackbench'  : [ 'test_time' ],
-        'geekbench'  : [ 'score', 'multicore_score' ],
-        'linpack'    : [ 'Linpack ST', 'Linpack MT' ],
-        'quadrant'   : [ 'benchmark_score' ],
-        'smartbench' : [ 'Smartbench: valueProd', 'Smartbench: valueGame' ],
-        'nenamark'   : [ 'nenamark score' ],
+        'hackbench'    : [ 'test_time' ],
+        'geekbench'    : [ 'score',
+                           'multicore_score' ],
+        'linpack'      : [ 'Linpack ST',
+                           'Linpack MT' ],
+        'quadrant'     : [ 'benchmark_score' ],
+        'smartbench'   : [ 'Smartbench: valueProd',
+                           'Smartbench: valueGame' ],
+        'nenamark'     : [ 'nenamark score' ],
+        'recentfling'  : [ 'Average 90th Percentile',
+                           'Average 95th Percentile',
+                           'Average 99th Percentile',
+                           'Average Jank',
+                           'Average Jank%' ],
+        'galleryfling' : [ 'Average 90th Percentile',
+                           'Average 95th Percentile',
+                           'Average 99th Percentile',
+                           'Average Jank',
+                           'Average Jank%' ],
+        'browserfling' : [ 'Average 90th Percentile',
+                           'Average 95th Percentile',
+                           'Average 99th Percentile',
+                           'Average Jank',
+                           'Average Jank%' ],
+        'emailfling'   : [ 'Average 90th Percentile',
+                           'Average 95th Percentile',
+                           'Average 99th Percentile',
+                           'Average Jank',
+                           'Average Jank%' ],
     }
 
     # Parse the testing sections, every section is corresponding to one
@@ -116,20 +139,23 @@ class ComparisionReporter(ResultProcessor):
         outfile = os.path.join(self.outdir, comp_type + '_plot.txt')
         os.system('gnuplot -e "filename=\'' + outfile + '\''+'" /tmp/plot_template')
 
-    def write_scenario(self, scene, value, baseline=None):
+    def write_scenario(self, scene, metric, value, baseline=None):
 
-        self.fo.write(scene)
+        self.fo.write(scene.replace(" ", "_") + '_' + metric.replace(" ", "_"))
 
         if not baseline is None:
-            for condition, values in sorted(value[baseline].items()):
-                base = sum(values) / len(values)
+            for m, values in sorted(value[baseline].items()):
+                if m == metric:
+                    base = sum(values) / len(values)
+                    break
         else:
             base = 0
 
         for kern in self.sections:
             collectValue = sorted(value[kern].items())
-            for condition, values in collectValue:
-                self.fo.write(' ' + str(sum(values) / len(values) - base))
+            for m, values in collectValue:
+                if m == metric:
+                    self.fo.write(' ' + str(sum(values) / len(values) - base))
 
         self.fo.write('\n')
 
@@ -186,7 +212,9 @@ class ComparisionReporter(ResultProcessor):
             if bool(value) == False:
                 continue
             has_data = True
-            self.write_scenario(s, value, baseline)
+
+            for metric in scenarios[s]:
+                self.write_scenario(s, metric, value, baseline)
         self.fo.close()
 
         # Skip comparison when scenario data is empty
