@@ -67,6 +67,7 @@ class FpsProcessor(object):
         drop_threshold - data points below this fps will be dropped
         """
         fps = float('nan')
+	janks_pct = float('nan')
         frame_count, janks, not_at_vsync = 0, 0, 0
         vsync_interval = refresh_period
         per_frame_fps = pd.Series()
@@ -125,7 +126,12 @@ class FpsProcessor(object):
                     janks = series['Janky frames']
                     not_at_vsync = series['Number Missed Vsync']
 
-        metrics = (fps, frame_count, janks, not_at_vsync)
+	if frame_count != 0:
+		janks_pct = float(janks * 100) / float(frame_count)
+	else:
+		janks_pct  = 0
+
+        metrics = (fps, frame_count, janks, janks_pct, not_at_vsync)
         return per_frame_fps, metrics
 
     def percentiles(self):
