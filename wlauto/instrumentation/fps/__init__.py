@@ -202,7 +202,7 @@ class FpsInstrument(Instrument):
 
     def update_result(self, context):
         if self.is_enabled:
-            fps, frame_count, janks, not_at_vsync = float('nan'), 0, 0, 0
+            fps, frame_count, janks, janks_pct, not_at_vsync = float('nan'), 0, 0, float('nan'), 0
             p90, p95, p99 = [float('nan')] * 3
             data = pd.read_csv(self.outfile)
             if not data.empty:  # pylint: disable=maybe-no-member
@@ -212,7 +212,7 @@ class FpsInstrument(Instrument):
                     stats_file = os.path.join(os.path.dirname(self.outfile), 'gfxinfo.csv')
                 fp = FpsProcessor(data, extra_data=stats_file)
                 per_frame_fps, metrics = fp.process(self.collector.refresh_period, self.drop_threshold)
-                fps, frame_count, janks, not_at_vsync = metrics
+                fps, frame_count, janks, janks_pct, not_at_vsync = metrics
 
                 if self.generate_csv:
                     per_frame_fps.to_csv(self.fps_outfile, index=False, header=True)
@@ -223,6 +223,7 @@ class FpsInstrument(Instrument):
             context.result.add_metric('FPS', fps)
             context.result.add_metric('frame_count', frame_count)
             context.result.add_metric('janks', janks, lower_is_better=True)
+            context.result.add_metric('janks%', janks_pct, '%', lower_is_better=True)
             context.result.add_metric('not_at_vsync', not_at_vsync, lower_is_better=True)
             context.result.add_metric('frame_time_90percentile', p90, 'ms', lower_is_better=True)
             context.result.add_metric('frame_time_95percentile', p95, 'ms', lower_is_better=True)
