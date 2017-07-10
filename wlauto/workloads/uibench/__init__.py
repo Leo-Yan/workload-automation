@@ -72,10 +72,6 @@ class Uibench(ApkWorkload):
         Parameter('uibench_activity', default='TrivialAnimationActivity', kind=str,
                   allowed_values=list(activity_type.keys()),
                   description='which activity the Uibench test to be run.'),
-        Parameter('swipe_time', kind=int, default=100,
-                  description='Specifies swipe time.'),
-        Parameter('interval', kind=int, default=2,
-                  description='Specifies swipe interval time.'),
         Parameter('run_timeout', kind=int, default=10,
                   description="""
                   Run time for workload execution. There have some activities don't need
