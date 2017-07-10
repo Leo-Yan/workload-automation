@@ -307,6 +307,11 @@ class LatencyCollector(threading.Thread):
             wfh = os.fdopen(fd, 'wb')
             try:
                 view_list = self.activities
+
+                for activity in self.activities:
+                    if activity in view_list:
+                        wfh.write(self.device.execute(self.command_template.format(activity)))
+
                 while not self.stop_signal.is_set():
                     # If a list_command is provided, set the view_list to be its output
                     # Then check for each activity in this list and if there is a match,
