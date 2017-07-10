@@ -20,8 +20,8 @@ import os
 import time
 from copy import copy
 
-from wlauto import ApkWorkload, Parameter, Alias
-from wlauto.exceptions import WorkloadError, ConfigError
+from wlauto import ApkWorkload, Parameter, Alias, File
+from wlauto.exceptions import WorkloadError, ConfigError, DeviceError, TimeoutError
 from wlauto.utils.types import list_or_string, numeric
 
 
@@ -72,10 +72,6 @@ class Uibench(ApkWorkload):
         Parameter('uibench_activity', default='TrivialAnimationActivity', kind=str,
                   allowed_values=list(activity_type.keys()),
                   description='which activity the Uibench test to be run.'),
-        Parameter('swipe_time', kind=int, default=100,
-                  description='Specifies swipe time.'),
-        Parameter('interval', kind=int, default=2,
-                  description='Specifies swipe interval time.'),
         Parameter('run_timeout', kind=int, default=10,
                   description="""
                   Run time for workload execution. There have some activities don't need
@@ -87,6 +83,18 @@ class Uibench(ApkWorkload):
 
     def setup(self, context):
         super(Uibench, self).setup(context)
+
+        self.testdir = '/'.join([self.device.working_directory, 'uibench'])
+        self.testscript_target = self.testdir + "/uibench.sh";
+
+        if not self.device.file_exists(self.testdir):
+            self.device.execute('mkdir -p {}'.format(self.testdir))
+
+        if not self.device.file_exists(self.testscript_target):
+            self.testscript_host = context.resolver.get(File(self, "uibench.sh"))
+            self.device.push_file(self.testscript_host, self.testscript_target)
+
+        self._kill_uibench()
 
         self.activity = self.uibench_activity
         self.device.ensure_screen_is_on()
@@ -108,18 +116,21 @@ class Uibench(ApkWorkload):
             self.logger.debug(result)
 
         # Workload run for specific time
-        start_time = time.time()
-        while True:
-
-            if self.activity_type[self.activity] == 'swipe':
-                self.swipe_screen()
-            elif self.activity_type[self.activity] == 'click':
-                self.click_screen()
-            else:
-                self.device.sleep(self.interval)
-
-            if (time.time() - start_time) > self.run_timeout:
-                break
+        activity_type = self.activity_type[self.activity]
+        if activity_type == 'swipe' or activity_type == 'click':
+            args = '-e {} -t {} '.format(self.activity_type[self.activity], self.run_timeout)
+            cmd = "echo $$>{dir}/pidfile; cd {bindir}; exec ./uibench.sh {args}; rm {dir}/pidfile"
+            cmd = cmd.format(args=args, dir=self.device.working_directory, bindir=self.testdir)
+            try:
+                self.device.execute(cmd, timeout=120)
+            except KeyboardInterrupt:
+                self._kill_uibench()
+                raise
+            except TimeoutError:
+                self._kill_uibench()
+                raise
+        else:
+            self.device.sleep(self.run_timeout)
 
     def update_result(self, context):  # NOQA
         super(Uibench, self).update_result(context)
@@ -127,29 +138,16 @@ class Uibench(ApkWorkload):
     def _build_command(self):
         return 'am start -W -S -n {}/.{}'.format(self.package, self.activity)
 
-    def swipe_screen(self):
-        width, height = self.device.get_screen_size()
-        swipe_time = self.swipe_time
+    def teardown(self, context):
+        super(Uibench, self).teardown(context)
+        print "Remove shell scripts from target..."
+        self.device.uninstall_executable(self.testscript_target)
 
-        swipe_middle = width / 2
-        start = height * 2 / 3
-        stop = height * 1 / 3
-
-        # Firstly swipe up
-        command = 'input swipe {} {} {} {} {}'.format(swipe_middle, start, swipe_middle, stop, swipe_time)
-        self.device.execute(command)
-        self.device.sleep(self.interval)
-        # Swipe down so back to original position
-        command = 'input swipe {} {} {} {} {}'.format(swipe_middle, stop, swipe_middle, start, swipe_time)
-        self.device.execute(command)
-        self.device.sleep(self.interval)
-
-    def click_screen(self):
-        width, height = self.device.get_screen_size()
-
-        x_axis = width / 2
-        y_axis = height / 2
-
-        command = 'input tap {} {}'.format(x_axis, y_axis)
-        self.device.execute(command)
-        self.device.sleep(self.interval)
+    def _kill_uibench(self):
+        command = 'cat {}/pidfile'.format(self.device.working_directory)
+        try:
+            pid = self.device.execute(command)
+            if pid.strip():
+                self.device.kill(pid.strip(), signal='SIGKILL')
+        except DeviceError:
+            pass  # may have already been deleted
