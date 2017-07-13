@@ -30,6 +30,7 @@ import re
 import logging
 import time
 import tarfile
+import csv
 from itertools import izip, izip_longest
 from subprocess import CalledProcessError
 
@@ -286,6 +287,113 @@ class DynamicFrequencyInstrument(SysfsExtractor):
         if not self.tmpfs_mount_point.endswith('-cpufreq'):  # pylint: disable=access-member-before-definition
             self.tmpfs_mount_point += '-cpufreq'
 
+
+class EasStatInstrument(Instrument):
+
+    name = 'eas_stats'
+    description = """
+    Pulls the ``/proc/schedstat`` file before and after workload execution and diffs them
+    to show what scheduler occurred during that time.
+
+    """
+
+    def __init__(self, device, **kwargs):
+        super(EasStatInstrument, self).__init__(device, **kwargs)
+        self.before_file = None
+        self.after_file = None
+        self.diff_file = None
+
+    def setup(self, context):
+        self.before_file = os.path.join(context.output_directory, 'before', 'proc', 'schedstat')
+        self.after_file = os.path.join(context.output_directory, 'after', 'proc', 'schedstat')
+        self.diff_file = os.path.join(context.output_directory, 'diff', 'proc', 'interrupts')
+
+    def start(self, context):
+        with open(_f(self.before_file), 'w') as wfh:
+            wfh.write(self.device.execute('cat /proc/schedstat'))
+
+    def stop(self, context):
+        with open(_f(self.after_file), 'w') as wfh:
+            wfh.write(self.device.execute('cat /proc/schedstat'))
+
+    def update_result(self, context):
+        stats = dict()
+
+        # If workload execution failed, the after_file may not have been created.
+        if os.path.isfile(self.after_file):
+            stats = _diff_easstats_files(self.before_file, self.after_file)
+            for key in sorted(stats):
+                context.add_metric('sched_' + key, stats[key], "")
+
+def parse_schedstats(infile):
+
+    stats = {
+        'sis_attempts' : 0,
+        'secb_attempts' : 0,
+        'secb_sync' : 0,
+        'secb_idle_bt' : 0,
+        'secb_insuff_cap' : 0,
+        'secb_no_nrg_sav' : 0,
+        'secb_nrg_sav' : 0,
+        'secb_count' : 0,
+        'fbt_attempts' : 0,
+        'fbt_no_cpu' : 0,
+        'fbt_no_sd' : 0,
+        'fbt_pref_idle' : 0,
+        'fbt_count' : 0,
+        'cas_attempts' : 0,
+        'tob' : 0,
+        'tol' : 0,
+    }
+
+    fr = open(infile, "r")
+    in_line = csv.reader(fr, delimiter=' ')
+    next(in_line, None)
+
+    flag = False
+
+    for row in in_line:
+        if "cpu" in row[0]:
+            flag = True
+            continue
+
+        if "eas" in row[0] and flag == True:
+            stats['sis_attempts']    += int(row[1])
+
+            stats['secb_attempts']   += int(row[7])
+            stats['secb_sync']       += int(row[8])
+            stats['secb_idle_bt']    += int(row[9])
+            stats['secb_insuff_cap'] += int(row[10])
+            stats['secb_no_nrg_sav'] += int(row[11])
+            stats['secb_nrg_sav']    += int(row[12])
+            stats['secb_count']      += int(row[13])
+
+            stats['fbt_attempts']    += int(row[14])
+            stats['fbt_no_cpu']      += int(row[15])
+            stats['fbt_no_sd']       += int(row[16])
+            stats['fbt_pref_idle']   += int(row[17])
+            stats['fbt_count']       += int(row[18])
+
+            stats['cas_attempts']    += int(row[19])
+
+            stats['tob']             += int(row[21])
+            stats['tol']             += int(row[22])
+            flag = False
+
+    return stats
+
+def _diff_easstats_files(before, after):  # pylint: disable=R0914
+
+    before_stats = dict()
+    after_stats  = dict()
+    stats   = dict()
+
+    before_stats = parse_schedstats(before)
+    after_stats  = parse_schedstats(after)
+
+    for key in before_stats:
+        stats[key] = after_stats[key] - before_stats[key]
+    return stats
 
 def _diff_interrupt_files(before, after, result):  # pylint: disable=R0914
     output_lines = []
