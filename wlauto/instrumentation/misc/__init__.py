@@ -329,6 +329,11 @@ def parse_schedstats(infile):
 
     stats = {
         'sis_attempts' : 0,
+        'sis_idle' : 0,
+        'sis_cache_affine' : 0,
+        'sis_suff_cap' : 0,
+        'sis_idle_cpu' : 0,
+        'sis_count' : 0,
         'secb_attempts' : 0,
         'secb_sync' : 0,
         'secb_idle_bt' : 0,
@@ -358,26 +363,31 @@ def parse_schedstats(infile):
             continue
 
         if "eas" in row[0] and flag == True:
-            stats['sis_attempts']    += int(row[1])
+            stats['sis_attempts']     += int(row[1])
+            stats['sis_idle']         += int(row[2])
+            stats['sis_cache_affine'] += int(row[3])
+            stats['sis_suff_cap']     += int(row[4])
+            stats['sis_idle_cpu']     += int(row[5])
+            stats['sis_count']        += int(row[6])
 
-            stats['secb_attempts']   += int(row[7])
-            stats['secb_sync']       += int(row[8])
-            stats['secb_idle_bt']    += int(row[9])
-            stats['secb_insuff_cap'] += int(row[10])
-            stats['secb_no_nrg_sav'] += int(row[11])
-            stats['secb_nrg_sav']    += int(row[12])
-            stats['secb_count']      += int(row[13])
+            stats['secb_attempts']    += int(row[7])
+            stats['secb_sync']        += int(row[8])
+            stats['secb_idle_bt']     += int(row[9])
+            stats['secb_insuff_cap']  += int(row[10])
+            stats['secb_no_nrg_sav']  += int(row[11])
+            stats['secb_nrg_sav']     += int(row[12])
+            stats['secb_count']       += int(row[13])
 
-            stats['fbt_attempts']    += int(row[14])
-            stats['fbt_no_cpu']      += int(row[15])
-            stats['fbt_no_sd']       += int(row[16])
-            stats['fbt_pref_idle']   += int(row[17])
-            stats['fbt_count']       += int(row[18])
+            stats['fbt_attempts']     += int(row[14])
+            stats['fbt_no_cpu']       += int(row[15])
+            stats['fbt_no_sd']        += int(row[16])
+            stats['fbt_pref_idle']    += int(row[17])
+            stats['fbt_count']        += int(row[18])
 
-            stats['cas_attempts']    += int(row[19])
+            stats['cas_attempts']     += int(row[19])
 
-            stats['tob']             += int(row[21])
-            stats['tol']             += int(row[22])
+            stats['tob']              += int(row[21])
+            stats['tol']              += int(row[22])
             flag = False
 
     return stats
